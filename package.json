@@ -1,0 +1,27 @@
+{
+  "name": "classcart",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "js/server.js",
+  "scripts": {
+    "start": "node js/server.js"
+  },
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HnnhKylSdsBrl/ClassCart.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/HnnhKylSdsBrl/ClassCart/issues"
+  },
+  "homepage": "https://github.com/HnnhKylSdsBrl/ClassCart#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mongodb": "^6.20.0"
+  }
+}
