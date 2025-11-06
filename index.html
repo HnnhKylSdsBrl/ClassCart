@@ -8,7 +8,6 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     />
-
     <link rel="stylesheet" href="css/index.css" />
   </head>
 
@@ -16,31 +15,59 @@
     <header>
       <div class="logo">
         <div class="logo-wrap">
-          <img src="images/cart.png" alt="cart" id="cart" />
-          <img src="images/glass.png" alt="mag-glass" id="glass" />
+          <img src="images/cart.png" alt="Shopping cart logo" id="cart" />
+          <img src="images/glass.png" alt="Search icon" id="glass" />
         </div>
         <span id="logo-text">ClassCart</span>
       </div>
     </header>
 
-   
-<!-- SIDE BAR------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
-<div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
+    <!-- SIDE BAR------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+    <div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
 
-<div id="sidebar" class="sidebar hidden">
-  <button id="closeSidebar" class="close-btn">&times;</button>
+    <div id="sidebar" class="sidebar hidden">
+      <button id="closeSidebar" class="close-btn">&times;</button>
 
-<h1 class="categories-title">Categories</h1>
-<br><br>
-<ul class="sidebar-links">
- <li><a href="#" onclick="filterItems('books')"><i class="fas fa-book"></i> Books</a></li>
-  <li><a href="#" onclick="filterItems('art-craft')"><i class="fas fa-paint-brush"></i> Art & Craft Supplies</a></li>
-  <li><a href="#" onclick="filterItems('clothing')"><i class="fas fa-tshirt"></i> Clothing & Uniforms</a></li>
-  <li><a href="#" onclick="filterItems('bags')"><i class="fas fa-shopping-bag"></i> Bags & Storage</a></li>
-  <li><a href="#" onclick="filterItems('tools')"><i class="fas fa-tools"></i> Tools</a></li>
-  <li><a href="#" onclick="filterItems('electronics')"><i class="fas fa-tools"></i> Electronics</a></li>
-  <li><a href="#" onclick="filterItems('essentials')"><i class="fas fa-tools"></i> Essentials</a></li>
-</div>
+      <h1 class="categories-title">Categories</h1>
+      <br /><br />
+      <ul class="sidebar-links">
+        <li>
+          <a href="#" onclick="filterItems('books')"
+            ><i class="fas fa-book"></i> Books</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="filterItems('art-craft')"
+            ><i class="fas fa-paint-brush"></i> Art & Craft Supplies</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="filterItems('clothing')"
+            ><i class="fas fa-tshirt"></i> Clothing & Uniforms</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="filterItems('bags')"
+            ><i class="fas fa-shopping-bag"></i> Bags & Storage</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="filterItems('tools')"
+            ><i class="fas fa-tools"></i> Tools</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="filterItems('electronics')"
+            ><i class="fas fa-tv"></i> Electronics</a
+          >
+        </li>
+        <li>
+          <a href="#" onclick="filterItems('essentials')"
+            ><i class="fas fa-box"></i> Essentials</a
+          >
+        </li>
+      </ul>
+    </div>
 
     <div class="navBar">
       <button class="sideBarBtn" onclick="openSidebar()">☰</button>
@@ -87,6 +114,7 @@
 
             <img
               src="images/userPic.jpg"
+              alt="User profile picture"
               class="userPic"
               style="width: 40px; height: 40px; border-radius: 50%"
             />
@@ -109,23 +137,35 @@
 
           <div class="cards-horizontal">
             <div class="card">
-              <img src="images/usb.jpg" alt="Art & Craft Supplies" />
+              <img
+                src="images/usb.jpg"
+                alt="Art and craft supplies category image"
+              />
               <h3>Art & Craft Supplies</h3>
             </div>
             <div class="card">
-              <img src="images/usb.jpg" alt="Uniforms & Clothing" />
+              <img
+                src="images/usb.jpg"
+                alt="Uniforms and clothing category image"
+              />
               <h3>Uniforms & Clothing</h3>
             </div>
             <div class="card">
-              <img src="images/usb.jpg" alt="Books & Electronics" />
+              <img
+                src="images/usb.jpg"
+                alt="Books and electronics category image"
+              />
               <h3>Books & Electronics</h3>
             </div>
             <div class="card">
-              <img src="images/usb.jpg" alt="Bags & Storage" />
+              <img src="images/usb.jpg" alt="Bags and storage category image" />
               <h3>Bags & Storage</h3>
             </div>
             <div class="card">
-              <img src="images/usb.jpg" alt="Essentials & Tools" />
+              <img
+                src="images/usb.jpg"
+                alt="Essentials and tools category image"
+              />
               <h3>Essentials & Tools</h3>
             </div>
           </div>
@@ -134,42 +174,9 @@
     </main>
 
     <section class="new-items">
-      <h2>
-        Newly Listed Items
-       
-      </h2>
-      <div class="items-container">
-       
+      <h2>Newly Listed Items</h2>
+      <div class="items-container"></div>
     </section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
 
     <footer class="footer">
       <div class="footerlogo">ClassCart</div>
@@ -182,12 +189,13 @@
         <a href="#">Privacy Policy</a>
       </div>
       <div class="footersocials">
-        <a href="#"><i class=""></i></a>
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
       </div>
     </footer>
 
-
-<script src="js/index.js"></script>
-   
+    <script src="js/index.js"></script>
   </body>
 </html>
