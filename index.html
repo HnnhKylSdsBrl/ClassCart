@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+
+    <link rel="stylesheet" href="css/index.css" />
+  </head>
+
+  <body>
+    <header>
+      <div class="logo">
+        <div class="logo-wrap">
+          <img src="images/cart.png" alt="cart" id="cart" />
+          <img src="images/glass.png" alt="mag-glass" id="glass" />
+        </div>
+        <span id="logo-text">ClassCart</span>
+      </div>
+    </header>
+
+   
+<!-- SIDE BAR------------------------------------------------------------------------------------------------------------------------------------------------------------------------->
+<div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
+
+<div id="sidebar" class="sidebar hidden">
+  <button id="closeSidebar" class="close-btn">&times;</button>
+
+<h1 class="categories-title">Categories</h1>
+<br><br>
+<ul class="sidebar-links">
+ <li><a href="#" onclick="filterItems('books')"><i class="fas fa-book"></i> Books</a></li>
+  <li><a href="#" onclick="filterItems('art-craft')"><i class="fas fa-paint-brush"></i> Art & Craft Supplies</a></li>
+  <li><a href="#" onclick="filterItems('clothing')"><i class="fas fa-tshirt"></i> Clothing & Uniforms</a></li>
+  <li><a href="#" onclick="filterItems('bags')"><i class="fas fa-shopping-bag"></i> Bags & Storage</a></li>
+  <li><a href="#" onclick="filterItems('tools')"><i class="fas fa-tools"></i> Tools</a></li>
+  <li><a href="#" onclick="filterItems('electronics')"><i class="fas fa-tools"></i> Electronics</a></li>
+  <li><a href="#" onclick="filterItems('essentials')"><i class="fas fa-tools"></i> Essentials</a></li>
+</div>
+
+    <div class="navBar">
+      <button class="sideBarBtn" onclick="openSidebar()">☰</button>
+
+      <nav
+        class="navLinks"
+        style="
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          padding: 10px;
+          flex-wrap: wrap;
+        "
+      >
+        <div class="searchBar" style="display: flex; align-items: center">
+          <input
+            type="text"
+            placeholder="Search items..."
+            style="
+              padding: 10px 15px;
+              border: 1px solid #ccc;
+              border-radius: 25px;
+              outline: none;
+              width: 400px;
+            "
+          />
+        </div>
+
+        <div
+          class="user-dropdown"
+          style="position: relative; display: inline-block"
+        >
+          <div
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              cursor: pointer;
+            "
+          >
+            <div class="loginbtn">
+              <a href="login-register.html">Sign in / Log in</a>
+            </div>
+
+            <img
+              src="images/userPic.jpg"
+              class="userPic"
+              style="width: 40px; height: 40px; border-radius: 50%"
+            />
+          </div>
+
+          <div class="user-dropdown-content">
+            <a href="login-register.html">My Account</a>
+            <a href="#">Settings</a>
+            <a href="index.html">Logout</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <main>
+      <div class="overlay">
+        <div class="content">
+          <h2>BUY AND SELL MMCM</h2>
+          <p>Find everything you need — all in one campus marketplace!</p>
+
+          <div class="cards-horizontal">
+            <div class="card">
+              <img src="images/usb.jpg" alt="Art & Craft Supplies" />
+              <h3>Art & Craft Supplies</h3>
+            </div>
+            <div class="card">
+              <img src="images/usb.jpg" alt="Uniforms & Clothing" />
+              <h3>Uniforms & Clothing</h3>
+            </div>
+            <div class="card">
+              <img src="images/usb.jpg" alt="Books & Electronics" />
+              <h3>Books & Electronics</h3>
+            </div>
+            <div class="card">
+              <img src="images/usb.jpg" alt="Bags & Storage" />
+              <h3>Bags & Storage</h3>
+            </div>
+            <div class="card">
+              <img src="images/usb.jpg" alt="Essentials & Tools" />
+              <h3>Essentials & Tools</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <section class="new-items">
+      <h2>
+        Newly Listed Items
+       
+      </h2>
+      <div class="items-container">
+       
+    </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+
+    <footer class="footer">
+      <div class="footerlogo">ClassCart</div>
+      <p>© 2025 ClassCart. All rights reserved.</p>
+      <div class="footerlinks">
+        <a href="#about">About</a>
+        <a href="#faqs">FAQs</a>
+        <a href="#contact">Contact Us</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Privacy Policy</a>
+      </div>
+      <div class="footersocials">
+        <a href="#"><i class=""></i></a>
+      </div>
+    </footer>
+
+
+<script src="js/index.js"></script>
+   
+  </body>
+</html>
