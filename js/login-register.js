@@ -150,6 +150,7 @@ if (regForm) {
       studentid: document.getElementById('reg-studentid').value.trim(),
       username: document.getElementById('reg-username').value.trim(),
       password: document.getElementById('reg-password').value,
+      contact: document.getElementById('reg-contact').value.trim(),
       confirm: document.getElementById('reg-confirmpass').value
     };
 
@@ -158,7 +159,7 @@ if (regForm) {
       clientValidateFullName(payload.name) ||
       clientValidateSchoolEmail(payload.email) ||
       clientValidateStudentId(payload.studentid) ||
-      clientValidateUsername(payload.username) ||
+      clientValidateUsername(payload.username, payload.email) ||
       clientValidatePassword(payload.password);
       clientValidateContact(payload.contact);
 

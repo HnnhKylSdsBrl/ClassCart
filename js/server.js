@@ -69,46 +69,61 @@ async function start() {
   // --- REGISTER ---
   app.post("/api/register", async (req, res) => {
     try {
-      const { name, email, studentid, username, password, confirm } = req.body;
+      const {
+        name,
+        email,
+        studentid,
+        username,
+        password,
+        confirm,
+        contact = ""
+      } = req.body ?? {};
+
+      // basic required checks
       if (!username || !password) {
         return res.status(400).json({ error: "username & password required" });
       }
+      if (password !== confirm) {
+        return res.status(400).json({ error: "Passwords do not match" });
+      }
 
-      //check existence of each data
-
-      //check usernames
       const users = getCollection("users");
+
+      // log incoming body for debug (remove in production)
+      console.log("[/api/register] body:", { name, email, studentid, username, contact });
+
+      // uniqueness checks
       const existingUser = await users.findOne({ username });
-      if (existingUser)
-        return res.status(409).json({ error: "Username already taken" });
+      if (existingUser) return res.status(409).json({ error: "Username already taken" });
 
-      //check emails
       const existingEmail = await users.findOne({ email });
-      if (existingEmail)
-        return res.status(409).json({ error: "Email already registered" });
+      if (existingEmail) return res.status(409).json({ error: "Email already registered" });
 
-      //check numbers
-      const existingContact = await users.findOne({ contact });
-      if (existingContact)
-        return res.status(409).json({ error: "Mobile number already registered" });
+      const existingContact = contact ? await users.findOne({ contact }) : null;
+      if (existingContact) return res.status(409).json({ error: "Mobile number already registered" });
 
+      // hash & insert
       const hash = await bcrypt.hash(password, 10);
       await users.insertOne({
-        name: name?.trim(),
-        email: email?.trim(),
-        studentid: String(studentid).trim(),
-        contact: contact.trim(),
+        name: name?.trim() || "",
+        email: email?.trim() || "",
+        studentid: String(studentid || "").trim(),
+        contact: String(contact || "").trim(),
         username: username.trim(),
         password: hash,
         createdAt: new Date(),
       });
 
-      
-
       return res.status(201).json({ ok: true, message: "Registered" });
     } catch (err) {
       console.error("Register error:", err);
-      return res.status(500).json({ error: "server error" });
+
+    // handle Mongo duplicate key more explicitly if present
+      if (err && err.code === 11000) {
+        return res.status(409).json({ error: "Duplicate key error" });
+      }
+
+     return res.status(500).json({ error: "server error" });
     }
   });
 
