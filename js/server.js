@@ -6,142 +6,186 @@ import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcryptjs";
+import session from "express-session";
+import MongoStore from "connect-mongo";
 
 dotenv.config();
-const app = express();
-app.use(cors());
-app.use(express.json());
 
-// serve static files from project root (one level up from /js/)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-app.use(express.static(path.join(__dirname, "..")));
-
-// MongoDB setup
+// --- MongoDB Setup ---
 const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = process.env.DB_NAME || "classcart_db";
-const client = new MongoClient(MONGO_URI);
 
-// helper to ensure connection and get collection
-async function getCollection(name) {
-  if (!client.topology) await client.connect();
-  const db = client.db(DB_NAME);
-  return db.collection(name);
+if (!MONGO_URI) {
+  console.error("❌ MONGO_URI missing in .env");
+  process.exit(1);
 }
 
-/* --- Validation helpers (server-side) --- */
-function validateFullName(name) {
-  if (!name) return "Full name required";
-  const s = name.trim();
-  if (s.length < 8 || s.length > 25) return "Full name must be 8–25 characters";
-  if (!/^[A-Za-z ]+$/.test(s)) return "Full name must contain only letters and spaces";
-  return null;
-}
+const client = new MongoClient(MONGO_URI); // removed deprecated useUnifiedTopology
 
-function validateSchoolEmail(email) {
-  if (!email) return "Email required";
-  if (!/@mcm\.edu\.ph$/i.test(email)) return "School email must end with @mcm.edu.ph";
-  return null;
-}
+// --- MAIN SERVER FUNCTION ---
+async function start() {
+  // connect to MongoDB
+  await client.connect();
+  console.log("✅ MongoDB connected");
 
-function validateStudentId(id) {
-  if (!id) return "Student ID required";
-  const s = String(id).trim();
-  if (!/^\d{10}$/.test(s)) return "Student ID must be exactly 10 digits";
-  if (!/^202\d{7}$/.test(s)) return "Student ID must start with 202";
-  return null;
-}
+  const app = express();
 
-function validateUsername(username) {
-  if (!username) return "Username required";
-  if (!/^[A-Za-z0-9._-]{3,20}$/.test(username)) return "Username must be 3–20 chars (letters, numbers, . _ -)";
-  return null;
-}
+  // --- Middlewares ---
+  app.use(
+    cors({
+      origin: true, // for local dev; specify explicit origin in production
+      credentials: true,
+    })
+  );
+  app.use(express.json());
 
-function validatePassword(pw) {
-  if (!pw) return "Password required";
-  // 8-15 chars, at least one digit and one letter, allows case sensitivity
-  const re = /^(?=.*\d)(?=.*[A-Za-z])[A-Za-z\d]{8,15}$/;
-  if (!re.test(pw)) return "Password must be 8–15 chars and include letters and numbers";
-  return null;
-}
+  // --- Sessions ---
+  app.use(
+    session({
+      name: "classcart.sid",
+      secret: process.env.SESSION_SECRET || "dev-secret-change-me",
+      resave: false,
+      saveUninitialized: false,
+      store: MongoStore.create({ client, dbName: DB_NAME }),
+      cookie: {
+        httpOnly: true,
+        sameSite: "lax",
+        // secure: true, // enable for HTTPS
+        maxAge: 1000 * 60 * 60 * 24, // 1 day
+      },
+    })
+  );
 
-/* --- REGISTER endpoint --- */
-app.post("/api/register", async (req, res) => {
-  try {
-    const { name, email, studentid, username, password, confirm } = req.body;
+  // --- Static Files ---
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = path.dirname(__filename);
+  app.use(express.static(path.join(__dirname, ".."))); // serve project root
 
-    // server-side validation
-    let err =
-      validateFullName(name) ||
-      validateSchoolEmail(email) ||
-      validateStudentId(studentid) ||
-      validateUsername(username) ||
-      validatePassword(password);
-    if (err) return res.status(400).json({ error: err });
+  // --- Helper: get collection ---
+  function getCollection(name) {
+    return client.db(DB_NAME).collection(name);
+  }
 
-    if (password !== confirm) return res.status(400).json({ error: "Password and confirm password do not match" });
-
-    const users = await getCollection("users");
-
-    // username uniqueness
-    const existingUser = await users.findOne({ username });
-    if (existingUser) return res.status(409).json({ error: "Username already taken" });
-
-    // password uniqueness check: compare against existing hashed passwords
-    // (okay for small datasets; for large DBs remove this or use a different policy)
-    const cursor = users.find({}, { projection: { password: 1 } });
-    while (await cursor.hasNext()) {
-      const u = await cursor.next();
-      if (u && u.password) {
-        const same = await bcrypt.compare(password, u.password);
-        if (same) {
-          return res.status(400).json({ error: "Please choose a more unique password" });
-        }
+  // --- REGISTER ---
+  app.post("/api/register", async (req, res) => {
+    try {
+      const { name, email, studentid, username, password, confirm } = req.body;
+      if (!username || !password) {
+        return res.status(400).json({ error: "username & password required" });
       }
+
+      //check existence of each data
+
+      //check usernames
+      const users = getCollection("users");
+      const existingUser = await users.findOne({ username });
+      if (existingUser)
+        return res.status(409).json({ error: "Username already taken" });
+
+      //check emails
+      const existingEmail = await users.findOne({ email });
+      if (existingEmail)
+        return res.status(409).json({ error: "Email already registered" });
+
+      //check numbers
+      const existingContact = await users.findOne({ contact });
+      if (existingContact)
+        return res.status(409).json({ error: "Mobile number already registered" });
+
+      const hash = await bcrypt.hash(password, 10);
+      await users.insertOne({
+        name: name?.trim(),
+        email: email?.trim(),
+        studentid: String(studentid).trim(),
+        contact: contact.trim(),
+        username: username.trim(),
+        password: hash,
+        createdAt: new Date(),
+      });
+
+      
+
+      return res.status(201).json({ ok: true, message: "Registered" });
+    } catch (err) {
+      console.error("Register error:", err);
+      return res.status(500).json({ error: "server error" });
     }
+  });
 
-    // hash password and save
-    const saltRounds = 10;
-    const hash = await bcrypt.hash(password, saltRounds);
+  // --- LOGIN ---
+  app.post("/api/login", async (req, res) => {
+    try {
+      const { username, password } = req.body ?? {};
+      if (!username || !password)
+        return res
+          .status(400)
+          .json({ error: "username & password required" });
 
-    await users.insertOne({
-      name: name.trim(),
-      email: email.trim(),
-      studentid: String(studentid).trim(),
-      username: username.trim(),
-      password: hash,
-      createdAt: new Date()
-    });
+      const users = getCollection("users");
+      const user = await users.findOne({ username });
 
-    return res.status(201).json({ ok: true, message: "Registered" });
-  } catch (err) {
-    console.error("Register error:", err);
-    return res.status(500).json({ error: "server error" });
-  }
-});
+      if (!user)
+        return res.status(401).json({ error: "invalid credentials" });
 
-/* --- LOGIN endpoint --- */
-app.post("/api/login", async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    if (!username || !password) return res.status(400).json({ error: "username & password required" });
+      const match = await bcrypt.compare(password, user.password);
+      if (!match)
+        return res.status(401).json({ error: "invalid credentials" });
 
-    const users = await getCollection("users");
-    const user = await users.findOne({ username: username });
-    if (!user) return res.status(401).json({ error: "invalid credentials" });
+      // set session
+      req.session.user = { username: user.username };
 
-    // case-sensitive password check using bcrypt.compare
-    const match = await bcrypt.compare(password, user.password);
-    if (!match) return res.status(401).json({ error: "invalid credentials" });
+      return res.json({
+        ok: true,
+        message: "Logged in",
+        user: { username: user.username },
+      });
+    } catch (err) {
+      console.error("Login error:", err);
+      return res.status(500).json({ error: "server error" });
+    }
+  });
 
-    // success — return minimal user info
-    return res.json({ ok: true, message: "Logged in", user: { username: user.username, name: user.name } });
-  } catch (err) {
-    console.error("Login error:", err);
-    return res.status(500).json({ error: "server error" });
-  }
-});
+  // --- PROFILE (uses session) ---
+  app.get("/api/profile", async (req, res) => {
+    try {
+      if (!req.session || !req.session.user)
+        return res.status(401).json({ error: "not authenticated" });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+      const username = req.session.user.username;
+      const users = getCollection("users");
+      const user = await users.findOne({ username });
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      res.json({
+        username: user.username,
+        name: user.name,
+        email: user.email,
+        contact: user.contact || "",
+        gender: user.gender || "",
+        dob: user.dob || "",
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: "Server error" });
+    }
+  });
+
+  // --- Default route for sanity check ---
+  app.get("/__health", (req, res) =>
+    res.json({ ok: true, time: new Date().toISOString() })
+  );
+
+  // --- START SERVER ---
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`✅ Server running at http://localhost:${PORT}`);
+  });
+}
+
+// --- CALL start() ---
+start()
+  .then(() => console.log("🚀 Startup sequence complete."))
+  .catch((err) => {
+    console.error("❌ Startup failed:", err);
+    process.exit(1);
+  });

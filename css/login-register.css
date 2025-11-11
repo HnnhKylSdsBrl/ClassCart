@@ -85,9 +85,8 @@ main.center-box {
     top: calc(50% + 35px);
     left: 50%;
     transform: translate(-50%, -50%);
-    height: 75vh;
+    height: 78vh;
     width: 900px;
-    background: #004aad;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     display: flex;
@@ -104,7 +103,7 @@ main.center-box {
 }
 
 .login-img {
-    height: 45%;
+    height: 55%;
     width: 100%;
     overflow: hidden;
     display: flex;
@@ -139,7 +138,7 @@ main.center-box {
 }
 
 .login-form h2 {
-    margin-top: -5px;
+    margin-top: 20px;
     text-align: center;
     font-weight: 700;
     color: white;
@@ -303,13 +302,14 @@ main.center-box {
 #reg-form input[type="text"],
 #reg-form input[type="number"],
 #reg-form input[type="password"],
-#reg-form input[type="email"] {
+#reg-form input[type="email"],
+#reg-form input[type="date"] {
     background-color: #004aad;
     color: white;
     display: block;
     width: 100%;
     margin-bottom: 1rem;
-    margin-left: -5px;
+    margin-left: -15px;
     padding: 8px;
     border: 1px solid #004aad;
     outline: none;
@@ -362,4 +362,61 @@ input[type=number]::-webkit-inner-spin-button {
 
 #reg-form a:hover {
     text-decoration: underline;
+}
+
+.password-wrapper {
+  position: relative;
+  display: block;
+  width: 100%;
+}
+
+.password-wrapper input[type="password"],
+.password-wrapper input[type="text"] {
+    background-color: #004aad;
+    color: white;
+    display: block;
+    outline: none;
+    width: 96%;
+    margin-bottom: 1rem;
+    margin-left: -8px;
+    padding: 9px;
+    border: 1px solid #004aad;
+    border-radius: 4px;
+    font-size: 1rem;
+    z-index: 1;
+}
+
+.toggle-eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-85%);
+  cursor: pointer;
+  user-select: none;
+  font-size: 1.3rem;
+  color: #ffffff;
+  transition: color 0.2s ease, transform 0.1s ease;
+  line-height: 1;
+  height: auto;
+}
+
+.toggle-eye:hover {
+  color: #cce0ff;
+  transform: translateY(-90%) scale(1.1);
+}
+
+/* --- INLINE ERROR MESSAGE STYLES (added section) --- */
+.error-msg {
+  display: block;
+  color: #ffb3b3;          /* soft red text */
+  font-size: 0.82rem;
+  margin-top: 4px;
+  margin-bottom: 8px;
+  min-height: 1em;         /* prevents layout jump */
+  white-space: normal;
+}
+
+input.invalid, .invalid {
+  border: 1px solid #ff6666 !important;
+  box-shadow: 0 0 0 3px rgba(255,102,102,0.06);
 }

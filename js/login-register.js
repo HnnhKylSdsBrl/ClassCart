@@ -1,5 +1,3 @@
-// js/login-register.js
-// UI toggles (preserve existing behaviour)
 (function () {
   function $id(id) { return document.getElementById(id); }
 
@@ -44,6 +42,8 @@
 })();
 
 // --- Client-side validation helpers (same rules as server for UX)
+
+//full name: required, 8-25 chars, letters and spaces only
 function clientValidateFullName(name) {
   if (!name) return "Full name required";
   const s = name.trim();
@@ -51,28 +51,92 @@ function clientValidateFullName(name) {
   if (!/^[A-Za-z ]+$/.test(s)) return "Full name must contain only letters and spaces";
   return null;
 }
+
+// school email: required, must end with @mcm.edu.ph
 function clientValidateSchoolEmail(email) {
   if (!email) return "Email required";
   if (!/@mcm\.edu\.ph$/i.test(email)) return "School email must end with @mcm.edu.ph";
   return null;
 }
+
+// student ID: required, exactly 10 digits, starts with 202
 function clientValidateStudentId(id) {
   if (!id) return "Student ID required";
   const s = String(id).trim();
   if (!/^\d{10}$/.test(s)) return "Student ID must be exactly 10 digits";
-  if (!/^202\d{7}$/.test(s)) return "Student ID must start with 202";
+  if (!/^202\d{7}$/.test(s)) return "Invalid Student ID";
   return null;
 }
-function clientValidateUsername(username) {
+
+
+function clientValidateUsername(username, email) {
   if (!username) return "Username required";
-  if (!/^[A-Za-z0-9._-]{3,20}$/.test(username)) return "Username must be 3–20 chars (letters, numbers, . _ -)";
+  const prefix = email.split("@")[0];
+  if (username !== prefix)
+    return "Username must match your school email prefix";
+  if (!/^[A-Za-z]+$/.test(username))
+    return "Username must contain letters only";
   return null;
 }
+
 function clientValidatePassword(pw) {
   if (!pw) return "Password required";
-  if (!/^(?=.*\d)(?=.*[A-Za-z])[A-Za-z\d]{8,15}$/.test(pw)) return "Password must be 8–15 chars and include letters and numbers";
+
+  // no special characters allowed
+  if (!pw) return "Password required";
+  if (!/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,15}$/.test(pw))
+    return "Password must be 8–15 chars, include letters, numbers, and a special character";
   return null;
 }
+
+function clientValidateContact(contact) {
+  if (!contact) return "Mobile number required";
+
+  // must be digits only
+  if (!/^\d+$/.test(contact))
+    return "Mobile number must contain numbers only.";
+
+  // must start with 09 and be exactly 11 digits
+  if (/^09\d{9}$/.test(contact)) return null;
+
+  // must start with +639 and be exactly 13 characters total
+  if (/^\+639\d{9}$/.test(contact)) return null;
+
+  // if +639 but too short/long
+  if (/^\+639/.test(contact))
+    return "Mobile number must have 11 digits.";
+
+  // if 09 but too short/long
+  if (/^09/.test(contact))
+    return "Mobile number must have 11 digits.";
+
+  // if wrong prefix
+  return "Invalid mobile number prefix.";
+}
+
+// dob
+function clientValidateDOB(dob) {
+  if (!dob) return null; // optional field
+
+  const birthDate = new Date(dob);
+  if (isNaN(birthDate.getTime()))
+    return "Invalid date format";
+
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  const dayDiff = today.getDate() - birthDate.getDate();
+
+  const isUnder17 =
+    age < 17 ||
+    (age === 17 && (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)));
+
+  if (isUnder17)
+    return "You must be at least 17 years old to register";
+
+  return null;
+}
+
 
 // --- Registration handler (client-side + POST)
 const regForm = document.getElementById('reg-form');
@@ -96,6 +160,8 @@ if (regForm) {
       clientValidateStudentId(payload.studentid) ||
       clientValidateUsername(payload.username) ||
       clientValidatePassword(payload.password);
+      clientValidateContact(payload.contact);
+
 
     if (err) { alert(err); return; }
     if (payload.password !== payload.confirm) { alert("Passwords do not match."); return; }
@@ -138,14 +204,15 @@ if (loginForm) {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(payload)
       });
       const json = await res.json();
+      console.log('login response', res.status, json);
       if (res.ok) {
         // success
-        localStorage.setItem('username', json.user.username);
         alert('✅ Login successful. Redirecting...');
-        window.location.href = 'dashboard.html';
+        window.location.href = 'index.html';
       } else {
         alert(json.error || 'Login failed');
       }
@@ -155,3 +222,75 @@ if (loginForm) {
     }
   });
 }
+// --- Password eye toggle (Font Awesome, with emoji fallback) ---
+document.addEventListener("DOMContentLoaded", () => {
+  const eyes = document.querySelectorAll(".toggle-eye");
+  if (!eyes || eyes.length === 0) {
+    console.warn("[toggle] no .toggle-eye elements found");
+    return;
+  }
+
+  // If Font Awesome didn't load, we will show emoji fallback.
+  const faLoaded = !!document.querySelector('.fa-solid, .fa-regular, .fa-eye, .fa-eye-slash');
+
+  eyes.forEach((eye) => {
+    // ensure data-target exists; auto-assign if missing
+    if (!eye.dataset.target) {
+      const wrapper = eye.closest('.password-wrapper');
+      const input = wrapper && wrapper.querySelector('input[type="password"], input[type="text"]');
+      if (input && input.id) eye.dataset.target = input.id;
+    }
+
+    // initial icon: use FA classes if available, otherwise emoji
+    if (faLoaded) {
+      // prefer the "eye" style initially
+      eye.classList.add('fa-regular', 'fa-eye');
+      // remove any text content fallback
+      eye.textContent = '';
+    } else {
+      eye.classList.add('fallback');
+      eye.textContent = '👁️';
+    }
+
+    eye.setAttribute('role', 'button');
+    eye.setAttribute('aria-label', 'Show or hide password');
+
+    eye.addEventListener('click', () => {
+      const targetId = eye.dataset.target;
+      if (!targetId) return console.warn('[toggle] missing data-target on eye');
+      const input = document.getElementById(targetId);
+      if (!input) return console.warn('[toggle] no input for target', targetId);
+
+      const wasPwd = input.type === 'password';
+      input.type = wasPwd ? 'text' : 'password';
+      input.focus();
+
+      // swap icon: Font Awesome
+      if (faLoaded) {
+        eye.classList.toggle('fa-eye');
+        eye.classList.toggle('fa-eye-slash');
+      } else {
+        // emoji fallback
+        eye.textContent = wasPwd ? '🙈' : '👁️';
+      }
+    });
+  });
+
+  console.log(`[toggle] initialized ${eyes.length} toggle-eye element(s). FA loaded: ${faLoaded}`);
+});
+
+document.querySelectorAll(".password-wrapper input").forEach((input) => {
+  const eye = input.parentElement.querySelector(".toggle-eye");
+  if (!eye) return;
+
+  // initial state — hide icon
+  eye.style.display = input.value ? "block" : "none";
+
+  // show/hide on input
+  input.addEventListener("input", () => {
+    eye.style.display = input.value ? "block" : "none";
+  });
+});
+
+
+

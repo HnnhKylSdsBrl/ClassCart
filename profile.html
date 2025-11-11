@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Profile - ClassCart</title>
+  <link rel="stylesheet" href="css/profile.css" />
+</head>
+
+<body>
+  <header>
+    <div class="logo">
+      <img src="images/cart.png" alt="Logo" />
+      <span>ClassCart</span>
+    </div>
+  </header>
+
+  <main>
+    <aside class="sidebar">
+      <div class="profile-pic">
+        <img src="images/userPic.jpg" alt="User avatar" />
+        <h3 id="profile-username">username</h3>
+      </div>
+      <ul>
+        <li><a href="#" id="profile-link">Profile</a></li>
+        <li><a href="#">Change Password</a></li>
+      </ul>
+    </aside>
+
+    <section class="profile-section">
+      <h2>My Profile</h2>
+      <p class="subtitle">Edit your account info</p>
+      <hr />
+
+      <div id="profile-view">
+        <p><strong>Username:</strong> <span id="v-username"></span></p>
+        <p><strong>Name:</strong> <span id="v-name"></span></p>
+        <p><strong>Email:</strong> <span id="v-email"></span></p>
+        <p><strong>Phone Number:</strong> <span id="v-contact"></span></p>
+        <p><strong>Gender:</strong> <span id="v-gender"></span></p>
+        <p><strong>Date of Birth:</strong> <span id="v-dob"></span></p>
+        <button id="edit-btn">Edit</button>
+      </div>
+
+      <form id="profile-edit" class="hidden">
+        <label>Username</label>
+        <input type="text" id="e-username" disabled />
+
+        <label>Name</label>
+        <input type="text" id="e-name" />
+
+        <label>Email</label>
+        <input type="text" id="e-email" disabled />
+
+        <label>Phone Number</label>
+        <input type="text" id="e-contact" />
+
+        <label>Gender</label>
+        <div class="gender-group">
+          <label><input type="radio" name="gender" value="Male" /> Male</label>
+          <label><input type="radio" name="gender" value="Female" /> Female</label>
+          <label><input type="radio" name="gender" value="Other" /> Other</label>
+        </div>
+
+        <label>Date of Birth</label>
+        <input type="date" id="e-dob" />
+
+        <div class="btn-group">
+          <button type="submit" id="save-btn">Save</button>
+          <button type="button" id="cancel-btn">Cancel</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="js/profile.js"></script>
+</body>
+</html>
