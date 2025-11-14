@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Payment Methods - ClassCart</title>
+
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
+
+  <!-- shared CSS -->
+  <link rel="stylesheet" href="css/profile.css" />
+
+  <!-- page-specific small styles -->
+  <style>
+    /* Payment Methods page tweaks - matches profile & transactions scale */
+    .pm-toolbar {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom: 18px;
+    }
+    .pm-left { display:flex; gap:12px; align-items:center; }
+    .pm-add-btn {
+      background:#003d73;
+      color:#fff;
+      border:2px solid #003d73;
+      padding:10px 18px;
+      border-radius:6px;
+      font-weight:800;
+      cursor:pointer;
+    }
+    .pm-add-btn:hover { background:#002d57; }
+
+    /* container for method cards */
+    .pm-list {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      margin-top: 6px;
+    }
+
+    /* each payment method card (pressable) */
+    .pm-card {
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:14px 16px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.04);
+      color: #eaf4ff;
+      cursor: pointer;
+      transition: transform .08s ease, background .08s ease;
+      font-weight: 800; /* big bold text as requested */
+      font-size: 16px;
+    }
+    .pm-card:hover { transform: translateY(-2px); background: rgba(255,255,255,0.06); }
+
+    /* left side: icon + details */
+    .pm-left-side { display:flex; gap:12px; align-items:center; flex:1; }
+    .pm-icon {
+      width:52px;height:52px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      background: rgba(255,255,255,0.06);
+      font-size:20px;color:#fff;
+    }
+    .pm-details { display:flex;flex-direction:column; gap:2px; }
+    .pm-title { font-weight:800; color:#fff; font-size:16px; }
+    .pm-sub { font-weight:600; color:rgba(230,240,255,0.85); font-size:13px; }
+
+    /* right side actions */
+    .pm-actions { display:flex; gap:10px; align-items:center; }
+    .pm-action-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: #fff;
+      padding:8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight:700;
+    }
+    .pm-action-btn:hover { background: rgba(255,255,255,0.06); }
+
+    /* primary badge */
+    .pm-primary {
+      background: rgba(0,122,255,0.12);
+      color: #cfe9ff;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:13px;
+      border:1px solid rgba(0,122,255,0.08);
+    }
+
+    /* empty state */
+    .pm-empty {
+      background: rgba(255,255,255,0.04);
+      border:1px dashed rgba(255,255,255,0.06);
+      padding:28px;border-radius:8px;color:#eaf4ff;text-align:center;
+    }
+
+    /* modal (reuse small style from transactions) */
+    .modal-backdrop { position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:1200; }
+    .modal { background:#fff; color:#02304f; border-radius:8px; padding:18px; max-width:640px; width:94%; box-shadow:0 8px 32px rgba(3,21,55,0.18); }
+    .modal h3 { margin:0 0 8px; }
+    .modal .row { display:flex; gap:12px; margin:8px 0; }
+    .form-field { display:flex; flex-direction:column; gap:6px; margin-bottom:8px; }
+    .form-field label { font-weight:700; color:#02304f; }
+    .form-field input { padding:8px 10px; border-radius:8px; border:1px solid #d0d7df; }
+
+    /* responsive tweaks */
+    @media (max-width:880px) {
+      .pm-card { font-size:15px; padding:12px; }
+      .pm-icon { width:44px;height:44px;font-size:18px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- header -->
+  <header>
+    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="window.location.href='index.html'">
+      <img src="images/cart.png" alt="logo" style="width:28px;height:28px;">
+      <span>ClassCart</span>
+    </div>
+  </header>
+
+  <!-- nav -->
+  <div class="profileNavBar">
+    <button class="backBtn" onclick="window.location.href='profile.html'">←</button>
+    <span class="nav-title">Payment Methods</span>
+  </div>
+
+  <main>
+    <!-- sidebar -->
+    <aside class="sidebar">
+      <div class="profile-pic">
+        <div class="avatar-wrapper">
+          <img id="profile-avatar" src="images/userPic.jpg" alt="User avatar" />
+          <button id="change-pic-btn" class="avatar-btn" title="Change profile picture"><i class="fa-solid fa-camera"></i></button>
+        </div>
+        <h3 id="profile-username">username</h3>
+        <p id="pic-error"></p>
+        <input id="profile-pic-input" type="file" accept="image/*" style="display:none" />
+      </div>
+
+      <div class="account-block">
+        <div class="account-title">MY ACCOUNT</div>
+        <ul class="account-links">
+          <li><a href="profile.html"><span class="dot"></span>Profile</a></li>
+          <li><a href="change-password.html"><span class="dot"></span>Change Password</a></li>
+        </ul>
+      </div>
+
+      <div class="account-block">
+        <div class="account-title">TRANSACTIONS</div>
+        <ul class="account-links">
+          <li><a href="transactions.html"><span class="dot"></span>Purchase History</a></li>
+        </ul>
+      </div>
+        <div class="account-block">
+            <div class="account-title">PAYMENT METHODS</div>
+                <ul class="account-links">
+                    <li><a href="payment-methods.html" class="active-link"><span class="dot"></span>Payment Methods</a></li>
+                </ul>
+        </div>
+    </aside>
+
+    <!-- right side -->
+    <section class="profile-section">
+      <h2>Payment Methods</h2>
+      <p class="subtitle">Manage your saved cards and payment options</p>
+      <div class="divider"></div>
+
+      <div class="pm-toolbar">
+        <div class="pm-left">
+          <button id="addMethodBtn" class="pm-add-btn"><i class="fa-solid fa-plus"></i>&nbsp;&nbsp;Add Payment Method</button>
+        </div>
+        <div>
+          <small id="pmSummary" style="color:rgba(230,240,255,0.9);font-weight:700;"></small>
+        </div>
+      </div>
+
+      <div id="pmList" class="pm-list"></div>
+
+      <div id="pmEmpty" class="pm-empty" style="display:none;">
+        You have no saved payment methods yet. Click <strong>Add Payment Method</strong> to get started.
+      </div>
+    </section>
+  </main>
+
+  <!-- modal for add/edit -->
+  <div id="pmModalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <h3 id="pmModalTitle">Add Payment Method</h3>
+        <button id="pmModalClose" class="close-btn" style="background:transparent;border:none;font-weight:800;cursor:pointer;">Close</button>
+      </div>
+
+      <form id="pmForm">
+        <div class="form-field">
+          <label for="pmType">Type</label>
+          <select id="pmType" required>
+            <option value="card">Card (Visa / Mastercard)</option>
+            <option value="gcash">GCash</option>
+            <option value="paymaya">PayMaya</option>
+            <option value="bank">Bank Transfer</option>
+          </select>
+        </div>
+
+        <div class="form-field">
+          <label for="pmLabel">Label (e.g., My Visa)</label>
+          <input id="pmLabel" type="text" required />
+        </div>
+
+        <div class="form-field" id="cardFields">
+          <label for="pmNumber">Card Number</label>
+          <input id="pmNumber" type="text" placeholder="1234 5678 9012 3456" />
+          <label for="pmExpiry">Expiry (MM/YY)</label>
+          <input id="pmExpiry" type="text" placeholder="08/27" />
+        </div>
+
+        <div class="form-field" id="walletFields" style="display:none">
+          <label for="pmAccount">Account / Mobile Number</label>
+          <input id="pmAccount" type="text" placeholder="09xxxxxxxxx or account id" />
+        </div>
+
+        <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+          <button type="submit" class="pm-add-btn">Save</button>
+          <button type="button" id="pmCancel" class="ghost-btn">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/payment-methods.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>

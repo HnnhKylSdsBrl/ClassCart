@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Transactions - ClassCart</title>
+
+  <!-- FontAwesome (icons) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+  />
+
+  <!-- Main shared CSS -->
+  <link rel="stylesheet" href="css/profile.css" />
+  <style>
+    /* Small page-specific tweaks so the table looks good inside the card */
+    .transactions-toolbar {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 18px;
+    }
+    .transactions-left {
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+
+    .search-input {
+      padding:8px 12px;
+      border-radius:8px;
+      border: none;
+      min-width: 220px;
+      background: #fff;
+      color: #02304f;
+    }
+
+    .status-filter {
+      padding:8px 12px;
+      border-radius:8px;
+      border: none;
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+    }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      margin-top: 6px;
+    }
+
+    table.transactions-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+    }
+
+    table.transactions-table thead th {
+      text-align: left;
+      padding: 12px 10px;
+      color: #eaf4ff;
+      font-weight: 700;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      background: transparent;
+    }
+
+    table.transactions-table tbody td {
+      padding: 12px 10px;
+      background: rgba(255,255,255,0.03);
+      color: #eaf4ff;
+      vertical-align: middle;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+
+    .status-pill {
+      padding:6px 10px;
+      border-radius: 999px;
+      font-weight:700;
+      font-size: 13px;
+      display:inline-block;
+    }
+    .status-paid { background: rgba(0,128,0,0.14); color: #bff0b8; border:1px solid rgba(0,128,0,0.12); }
+    .status-pending { background: rgba(255,204,0,0.12); color: #ffecb8; border:1px solid rgba(255,204,0,0.08); }
+    .status-cancelled { background: rgba(200,50,50,0.08); color: #ffb8b8; border:1px solid rgba(200,50,50,0.06); }
+
+    .action-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #fff;
+      padding:6px 10px;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:700;
+    }
+    .action-btn:hover { background: rgba(255,255,255,0.06); }
+
+    .pagination {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top: 14px;
+      justify-content: flex-end;
+    }
+    .page-btn {
+      background: transparent;
+      color: #eaf4ff;
+      border: 1px solid rgba(255,255,255,0.06);
+      padding:6px 10px;
+      border-radius:6px;
+      cursor:pointer;
+    }
+    .page-btn.active { background: rgba(255,255,255,0.08); }
+
+    /* modal */
+    .modal-backdrop {
+      position: fixed;
+      inset:0;
+      background: rgba(0,0,0,0.5);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index: 1200;
+    }
+    .modal {
+      background: #fff;
+      color: #02304f;
+      border-radius: 8px;
+      max-width: 760px;
+      width: 94%;
+      padding: 18px;
+      box-shadow: 0 6px 36px rgba(2,18,60,0.32);
+    }
+    .modal h3 { margin:0 0 8px; }
+    .modal .row { display:flex; gap:12px; margin:8px 0; }
+    .modal .row div { flex:1; }
+    .modal .close-btn {
+      background: transparent;
+      border: none;
+      color: #02304f;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* empty state */
+    .empty-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px dashed rgba(255,255,255,0.06);
+      padding: 28px;
+      text-align: center;
+      border-radius: 8px;
+      color: #eaf4ff;
+    }
+  </style>
+</head>
+<body>
+  <!-- TOP HEADER (unchanged) -->
+  <header>
+    <div style="display:flex; align-items:center; gap:10px; cursor:pointer;" onclick="window.location.href='index.html'">
+      <img src="images/cart.png" alt="logo" style="width:28px;height:28px;">
+      <span>ClassCart</span>
+    </div>
+  </header>
+
+  <!-- Blue Nav -->
+  <div class="profileNavBar">
+    <button class="backBtn" onclick="window.location.href='index.html'">←</button>
+    <span class="nav-title">Transactions</span>
+  </div>
+
+  <main>
+    <!-- Sidebar (same as other pages) -->
+    <aside class="sidebar">
+      <div class="profile-pic">
+        <div class="avatar-wrapper">
+          <img id="profile-avatar" src="images/userPic.jpg" alt="User avatar" />
+          <button id="change-pic-btn" class="avatar-btn" title="Change profile picture">
+            <i class="fa-solid fa-camera"></i>
+          </button>
+        </div>
+
+        <h3 id="profile-username">username</h3>
+        <p id="pic-error"></p>
+
+        <input id="profile-pic-input" type="file" accept="image/*" style="display:none" />
+      </div>
+
+      <div class="account-block">
+        <div class="account-title">MY ACCOUNT</div>
+        <ul class="account-links">
+          <li><a href="profile.html"><span class="dot"></span>Profile</a></li>
+          <li><a href="change-password.html"><span class="dot"></span>Change Password</a></li>
+        </ul>
+      </div>
+
+      <div class="account-block">
+        <div class="account-title">TRANSACTIONS</div>
+        <ul class="account-links">
+          <li><a href="transactions.html" class="active-link"><span class="dot"></span>Purchase History</a></li>
+        </ul>
+      </div>
+        <div class="account-block">
+            <div class="account-title">PAYMENT METHODS</div>
+                <ul class="account-links">
+                    <li><a href="payment-methods.html"><span class="dot"></span>Payment Methods</a></li>
+                </ul>
+        </div>     
+    </aside>
+
+    <!-- Right: Transactions card -->
+    <section class="profile-section">
+      <h2>Purchase History</h2>
+      <p class="subtitle">Your past purchases and order details</p>
+      <div class="divider"></div>
+
+      <div class="transactions-toolbar">
+        <div class="transactions-left">
+          <input type="text" id="searchInput" class="search-input" placeholder="Search items, seller..." />
+          <select id="statusFilter" class="status-filter" aria-label="Filter by status">
+            <option value="">All statuses</option>
+            <option value="paid">Paid</option>
+            <option value="pending">Pending</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <button id="exportCsvBtn" class="action-btn"><i class="fa-solid fa-file-csv"></i>&nbsp;Export</button>
+        </div>
+        <div>
+          <small id="summaryText" style="color:rgba(230,240,255,0.9);font-weight:600;"></small>
+        </div>
+      </div>
+
+      <div id="loading" style="display:none;color:#dbe9ff;font-weight:700">Loading transactions...</div>
+      <div id="errorBox" style="display:none;color:#ffcc00;font-weight:700"></div>
+
+      <div class="table-wrap" id="tableWrap">
+        <!-- table injected here -->
+      </div>
+
+      <div class="pagination" id="pagination"></div>
+    </section>
+  </main>
+
+  <!-- modal -->
+  <div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-hidden="true">
+    <div class="modal" role="document">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h3 id="modalTitle">Transaction</h3>
+        <button class="close-btn" id="modalCloseBtn">Close</button>
+      </div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- scripts -->
+  <script src="js/transactions.js"></script>
+  <script src="js/profile.js"></script>
+</body>
+</html>

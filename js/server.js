@@ -27,12 +27,29 @@ async function start() {
 
   const app = express();
 
+  // ===== CORS: restrict to known local origins so cookies are sent =====
   app.use(
     cors({
-      origin: true,
+      origin: [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        // If you use Live Server or other dev servers, add them here:
+        // "http://localhost:5500",
+        // "http://127.0.0.1:5500"
+      ],
       credentials: true,
     })
   );
+
+  // ===== Small debug middleware to inspect cookies & session during development =====
+  app.use((req, res, next) => {
+    console.log("🔎 Incoming request:", req.method, req.url);
+    console.log("Cookies header:", req.headers.cookie || "(none)");
+    // session will not be available until session middleware is attached,
+    // so this shows undefined for static file requests; it's still useful.
+    // We'll attach another logger after session middleware below for full info.
+    next();
+  });
 
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
@@ -61,6 +78,12 @@ async function start() {
       },
     })
   );
+
+  // Additional debug after session middleware to inspect session presence
+  app.use((req, res, next) => {
+    console.log("🔐 Session check:", req.method, req.url, "session.user=", req.session?.user ?? null);
+    next();
+  });
 
   // --- Add Listing ---
   app.post("/api/add-listing-base64", async (req, res) => {
@@ -144,6 +167,7 @@ async function start() {
         username: username.trim(),
         password: hash,
         createdAt: new Date(),
+        dobEditCount: 0
       });
 
       return res.status(201).json({ ok: true, message: "Registered" });
@@ -181,7 +205,7 @@ async function start() {
     }
   });
 
-  // --- LOGOUT (merged correctly) ---
+  // --- LOGOUT ---
   app.post("/api/logout", (req, res) => {
     try {
       req.session.destroy((err) => {
@@ -199,7 +223,7 @@ async function start() {
     }
   });
 
-  // --- PROFILE ---
+  // --- PROFILE (GET) ---
   app.get("/api/profile", async (req, res) => {
     try {
       if (!req.session || !req.session.user) {
@@ -218,10 +242,203 @@ async function start() {
         contact: user.contact || "",
         gender: user.gender || "",
         dob: user.dob || "",
+        dobEditCount: user.dobEditCount || 0,
+        imageUrl: user.imageUrl || ''
       });
     } catch (err) {
       console.error(err);
       res.status(500).json({ error: "Server error" });
+    }
+  });
+
+  // --- PROFILE (PUT) - Update profile with DOB validation & one-time edit ---
+  app.put("/api/profile", async (req, res) => {
+    try {
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: "not authenticated" });
+      }
+
+      const username = req.session.user.username;
+      const users = getCollection("users");
+      const user = await users.findOne({ username });
+      if (!user) return res.status(404).json({ error: "User not found" });
+
+      // Accept only these fields from client
+      const { name, contact, gender, dob } = req.body ?? {};
+
+      const updates = {};
+      if (typeof name === "string") updates.name = name.trim();
+      if (typeof contact === "string") updates.contact = String(contact).trim();
+      if (typeof gender === "string") updates.gender = gender;
+
+      // --- DOB validation & one-time-edit rule ---
+      if (typeof dob === "string" && dob !== "") {
+        // parse incoming dob
+        const dobDate = new Date(dob);
+        if (Number.isNaN(dobDate.getTime())) {
+          return res.status(400).json({ error: "Invalid birthdate format" });
+        }
+
+        // compute dynamic bounds
+        const now = new Date();
+        const minAllowed = new Date(now);
+        minAllowed.setFullYear(minAllowed.getFullYear() - 35); // oldest allowed DOB: no earlier than this (max age 35)
+        // youngest allowed fixed to 2014 (end of year)
+        const maxAllowed = new Date("2014-12-31T23:59:59.999Z");
+
+        // normalize to yyyy-mm-dd for clear comparison
+        const dobYMD = dobDate.toISOString().slice(0,10);
+        const minYMD = minAllowed.toISOString().slice(0,10);
+        const maxYMD = maxAllowed.toISOString().slice(0,10);
+
+        if (dobYMD < minYMD || dobYMD > maxYMD) {
+          return res.status(400).json({
+            error: `Birthdate must be between ${minYMD} and ${maxYMD}.`
+          });
+        }
+
+        // enforce one-time edit rule:
+        const existingDob = user.dob || "";
+        const dobEditCount = user.dobEditCount || 0;
+
+        if (existingDob && dob !== existingDob) {
+          if (dobEditCount >= 1) {
+            return res.status(403).json({ error: "Birthdate can only be edited once." });
+          }
+          // allow change and increment counter
+          updates.dob = dob;
+          updates.dobEditCount = dobEditCount + 1;
+        } else if (!existingDob) {
+          // initial set (no existing dob)
+          updates.dob = dob;
+          // initialise edit counter to 0 (no edits yet)
+          updates.dobEditCount = 0;
+        }
+        // if dob provided but equal to existingDob => no change
+      }
+
+      // if nothing to update
+      if (Object.keys(updates).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+
+      // ensure contact uniqueness if changed
+      if (updates.contact && updates.contact !== user.contact) {
+        const exists = await users.findOne({ contact: updates.contact });
+        if (exists) return res.status(409).json({ error: "Mobile number already registered" });
+      }
+
+      const result = await users.updateOne({ username }, { $set: updates });
+
+      if (result.matchedCount === 0) return res.status(404).json({ error: "User not found" });
+
+      const updated = await users.findOne({ username }, { projection: { password: 0 } });
+
+      res.json({
+        ok: true,
+        message: "Profile updated",
+        user: {
+          username: updated.username,
+          name: updated.name,
+          email: updated.email,
+          contact: updated.contact || "",
+          gender: updated.gender || "",
+          dob: updated.dob || "",
+          dobEditCount: updated.dobEditCount || 0,
+          imageUrl: updated.imageUrl || ''
+        },
+      });
+    } catch (err) {
+      console.error("Profile update error:", err);
+      return res.status(500).json({ error: "Server error while updating profile" });
+    }
+  });
+
+  // --- PROFILE PICTURE (PUT) - hardened, supports data URIs and raw base64 ---
+  app.put("/api/profile/picture", async (req, res) => {
+    try {
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: "not authenticated" });
+      }
+
+      let { imageBase64 } = req.body ?? {};
+
+      if (!imageBase64 || typeof imageBase64 !== "string") {
+        return res.status(400).json({ error: "Missing field: imageBase64 (string expected)" });
+      }
+
+      // Accept data URI OR raw base64 OR JSON-with-base64 string
+      let mime = null;
+      let b64 = null;
+
+      // 1) data:<mime>;base64,AAA...
+      const dataUriMatch = imageBase64.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+      if (dataUriMatch) {
+        mime = dataUriMatch[1].toLowerCase();
+        b64 = dataUriMatch[2];
+      } else {
+        // 2) maybe it's a JSON string like {"base64":"AAA","mime":"image/png"}
+        try {
+          const parsed = JSON.parse(imageBase64);
+          if (parsed && parsed.base64) {
+            b64 = parsed.base64;
+            mime = (parsed.mime || parsed.type || '').toLowerCase() || null;
+          }
+        } catch (_) {
+          // not JSON, treat as raw base64
+          b64 = imageBase64.replace(/\s+/g, '');
+        }
+      }
+
+      if (!b64) {
+        return res.status(400).json({ error: "Could not extract base64 image data. Send a data URL or { base64, mime }." });
+      }
+
+      const buffer = Buffer.from(b64, 'base64');
+
+      // quick size check
+      if (buffer.length === 0) {
+        return res.status(400).json({ error: "Empty image data" });
+      }
+      if (buffer.length > 2 * 1024 * 1024) {
+        return res.status(413).json({ error: "Image too large (max 2MB)" });
+      }
+
+      // infer mime if missing using "magic numbers"
+      if (!mime) {
+        if (buffer.slice(0,8).equals(Buffer.from([0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A]))) mime = 'image/png';
+        else if (buffer.slice(0,3).equals(Buffer.from([0xFF,0xD8,0xFF]))) mime = 'image/jpeg';
+        else if (buffer.slice(0,4).equals(Buffer.from([0x52,0x49,0x46,0x46]))) {
+          // RIFF — could be WEBP (RIFF....WEBP)
+          if (buffer.slice(8,12).toString() === 'WEBP') mime = 'image/webp';
+        }
+      }
+
+      const allowed = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+      if (!mime || !allowed.includes(mime)) {
+        return res.status(400).json({ error: "Unsupported image mime type. Use PNG / JPEG / WEBP." });
+      }
+
+      // store as data URL on user doc (quick implementation)
+      const users = getCollection("users");
+      const username = req.session.user.username;
+      const dataUrl = `data:${mime};base64,${b64}`;
+
+      await users.updateOne({ username }, { $set: { imageUrl: dataUrl } });
+
+      const updated = await users.findOne({ username }, { projection: { password: 0 } });
+
+      return res.json({
+        ok: true,
+        message: "Profile picture updated",
+        user: {
+          username: updated.username,
+          imageUrl: updated.imageUrl
+        }
+      });
+    } catch (err) {
+      console.error("Profile picture upload error:", err);
+      return res.status(500).json({ error: "Server error while saving picture" });
     }
   });
 
