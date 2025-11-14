@@ -37,6 +37,7 @@
       </ul>
     </div>
 
+    <!-- NAVBAR: matches index.css layout; welcome text appears before avatar; no inline CSS -->
     <div class="navBar">
       <nav class="navLinks">
         <ul>
@@ -44,11 +45,18 @@
           <li><a href="#"><i class="fas fa-envelope"></i></a></li>
         </ul>
 
-        <div class="user-dropdown" style="position: relative; display: inline-block">
-          <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-            <label style="font-size: 14px; color: #ffffff">Hi, Username</label>
-            <img src="images/userPic.jpg" alt="User profile picture" class="userPic" style="width: 40px; height: 40px; border-radius: 50%" />
+        <div class="user-dropdown">
+          <div class="user-summary">
+            <div class="loginbtn"></div>
+
+            <!-- avatar -->
+            <img
+              src="images/userPic.jpg"
+              alt="User profile picture"
+              class="userPic"
+            />
           </div>
+
           <div class="user-dropdown-content">
             <a href="index.html">Dashboard</a>
             <a href="my-profile.html">My Profile</a>
@@ -58,16 +66,21 @@
         </div>
       </nav>
     </div>
+    <!-- END NAVBAR -->
 
     <main class="create-listing-container">
       <h1>Create New Listing</h1>
+
       <form class="listing-form" id="listingForm" enctype="multipart/form-data">
         <label for="sellerName">Seller Name</label>
         <input type="text" id="sellerName" name="sellerName" placeholder="Enter your name" required />
+
         <label for="itemName">Item Name</label>
         <input type="text" id="itemName" name="itemName" placeholder="Enter item name" required />
+
         <label for="price">Price (₱)</label>
         <input type="number" id="price" name="price" placeholder="Enter price" required />
+
         <label for="category">Item Category</label>
         <select id="category" name="category" required>
           <option value="">--Select Category--</option>
@@ -79,6 +92,7 @@
           <option value="Tools">Tools</option>
           <option value="Essentials">Essentials</option>
         </select>
+
         <label for="condition">Item Condition</label>
         <select id="condition" name="condition" required>
           <option value="">--Select Condition--</option>
@@ -86,10 +100,19 @@
           <option value="Lightly Used">Lightly Used</option>
           <option value="Used">Used</option>
         </select>
+
         <label for="description">Item Description</label>
-        <textarea id="description" name="description" placeholder="Describe your item..." rows="5" required></textarea>
+        <textarea
+          id="description"
+          name="description"
+          placeholder="Describe your item..."
+          rows="5"
+          required
+        ></textarea>
+
         <label for="location">Location</label>
         <input type="text" id="location" name="location" placeholder="Enter your location" required />
+
         <label for="imageUpload">Upload Item Image</label>
         <input type="file" id="imageUpload" name="imageUpload" accept="image/*" required />
 
