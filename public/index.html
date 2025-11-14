@@ -171,6 +171,21 @@
           </div>
         </div>
       </div>
+<section class="home-categories-section" style="padding: 30px 0; text-align:center;">
+  <h2 style="margin-bottom:15px;">Browse Categories</h2>
+
+  <div class="home-categories" style="display:flex; flex-wrap:wrap; justify-content:center; gap:15px;">
+    <button class="cat-btn" onclick="filterItems('all')">All</button>
+    <button class="cat-btn" onclick="filterItems('books')">Books</button>
+    <button class="cat-btn" onclick="filterItems('art-craft')">Art & Craft Supplies</button>
+    <button class="cat-btn" onclick="filterItems('clothing')">Clothing & Uniforms</button>
+    <button class="cat-btn" onclick="filterItems('bags')">Bags & Storage</button>
+    <button class="cat-btn" onclick="filterItems('tools')">Tools</button>
+    <button class="cat-btn" onclick="filterItems('electronics')">Electronics</button>
+    <button class="cat-btn" onclick="filterItems('essentials')">Essentials</button>
+  </div>
+</section>
+
 
        <h1>Available Listings</h1>
   <div id="itemsContainer" class="listings-container"></div>
@@ -240,6 +255,26 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 </script>
+
+<script>
+function filterItems(category) {
+  const cards = document.querySelectorAll(".item-card");
+
+  cards.forEach(card => {
+    const itemCat = card.getAttribute("data-category");
+
+    if (category === "all") {
+      card.style.display = "block";
+    } else if (itemCat === category.toLowerCase()) {
+      card.style.display = "block";
+    } else {
+      card.style.display = "none";
+    }
+  });
+}
+</script>
+
+
 <!-- SCRIPTS -->
 <script src="js/index.js"></script>
 <script src="js/item-listings.js"></script>
