@@ -1,4 +1,10 @@
 /* --- GLOBAL --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 html, body {
     height: 100%;
     margin: 0;
@@ -138,8 +144,9 @@ main.center-box {
 }
 
 .login-form h2 {
-    margin-top: 20px;
+    margin-top: 10px;
     text-align: center;
+    margin-bottom: 20px;
     font-weight: 700;
     color: white;
 }

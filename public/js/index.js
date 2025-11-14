@@ -1,117 +1,191 @@
-// js/index.js
-
 document.addEventListener("DOMContentLoaded", () => {
-
-  // USER PROFILE DROPDOWN MENU------------------------------------------------------------------------
-  function toggleMenu() {
-    const menu = document.getElementById("dropdownMenu");
-    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  function escapeHTML(s = "") {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
   }
 
-  window.onclick = function (event) {
-    if (!event.target.matches(".userPic")) {
-      const dropdown = document.getElementById("dropdownMenu");
-      if (dropdown && dropdown.style.display === "block") {
-        dropdown.style.display = "none";
-      }
+  const nav = document.querySelector(".navLinks") || document.body;
+
+  let loginBtn = document.querySelector(".loginbtn");
+  if (!loginBtn) {
+    loginBtn = document.createElement("div");
+    loginBtn.className = "loginbtn";
+    nav.appendChild(loginBtn);
+  }
+
+  let userDropdown = document.querySelector(".user-dropdown");
+  if (!userDropdown) {
+    userDropdown = document.createElement("div");
+    userDropdown.className = "user-dropdown logged-out";
+    userDropdown.innerHTML = `
+      <div class="user-summary" style="display:flex;align-items:center;gap:8px;">
+        <img class="userPic" src="images/userPic.jpg" style="width:40px;height:40px;border-radius:50%;display:inline-block;opacity:.35;">
+      </div>
+      <div class="user-dropdown-content hidden" style="display:none;">
+        <a href="profile.html">My Account</a>
+        <a href="#">Settings</a>
+        <a href="#" id="logoutLink">Logout</a>
+      </div>`;
+    nav.appendChild(userDropdown);
+  }
+
+  const userPic = document.querySelector(".userPic");
+  const userDropdownContent = document.querySelector(".user-dropdown-content");
+
+  function makeSigninAnchor() {
+    const a = document.createElement("a");
+    a.href = "login-register.html";
+    a.id = "signinLink";
+    a.textContent = "Sign in / Log in";
+    a.setAttribute("role", "link");
+    a.setAttribute("tabindex", "0");
+    a.style.pointerEvents = "auto";
+    a.style.zIndex = "999999";
+    a.style.position = "relative";
+    a.style.display = "inline-block";
+    a.addEventListener("click", (e) => { e.preventDefault(); window.location.href = "login-register.html"; });
+    return a;
+  }
+
+  function resetLoggedOutUI() {
+    loginBtn.innerHTML = "";
+    const a = makeSigninAnchor();
+    loginBtn.appendChild(a);
+    loginBtn.style.position = "relative";
+    loginBtn.style.zIndex = "999999";
+
+    if (userPic) {
+      userPic.style.opacity = "1";
+      userPic.style.pointerEvents = "none";
+      userPic.style.cursor = "default";
+      userPic.style.display = "inline-block";
+      userPic.style.visibility = "visible";
+      userPic.src = userPic.src || "images/userPic.jpg";
     }
-  };
 
-  // SIDE BAR-----------------------------------------------------------------------------------------
-  const sidebar = document.getElementById("sidebar");
-  const overlay = document.getElementById("sidebarOverlay");
-  const closeBtn = document.getElementById("closeSidebar");
+    userDropdown.classList.add("logged-out");
+    userDropdown.classList.remove("open");
 
-  function openSidebar() {
-    sidebar.classList.remove("hidden");
-    overlay.classList.remove("hidden");
+    if (userDropdownContent) {
+      userDropdownContent.classList.add("hidden");
+      userDropdownContent.style.display = "none";
+      userDropdownContent.style.removeProperty("left");
+      userDropdownContent.style.removeProperty("top");
+    }
+
+    attachLogoutHandler();
   }
 
-  function closeSidebar() {
-    sidebar.classList.add("hidden");
-    overlay.classList.add("hidden");
+  async function updateAuthUI() {
+    try {
+      const res = await fetch("/api/profile", {
+        method: "GET",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!res.ok) {
+        resetLoggedOutUI();
+        return;
+      }
+
+      const profile = await res.json();
+      const username = profile.username || "Account";
+
+      loginBtn.innerHTML = `<span class="welcome-text">Hi, ${escapeHTML(username)}</span>`;
+      loginBtn.style.pointerEvents = "default";
+      loginBtn.style.position = "relative";
+      loginBtn.style.zIndex = "1";
+
+      if (userPic) {
+        userPic.style.opacity = "1";
+        userPic.style.pointerEvents = "auto";
+        userPic.style.cursor = "pointer";
+        userPic.style.display = "inline-block";
+        userPic.style.visibility = "visible";
+        userPic.src = profile.avatar || userPic.src || "images/userPic.jpg";
+      }
+
+      userDropdown.classList.remove("logged-out");
+      userDropdown.classList.remove("open");
+
+      if (userDropdownContent) {
+        userDropdownContent.classList.add("hidden");
+        userDropdownContent.style.display = "none";
+      }
+
+      attachLogoutHandler();
+    } catch {
+      resetLoggedOutUI();
+    }
   }
 
-  if (closeBtn) closeBtn.addEventListener("click", closeSidebar);
-  if (overlay) overlay.addEventListener("click", closeSidebar);
+  function attachLogoutHandler() {
+    let logout = document.getElementById("logoutLink");
+    if (!logout) return;
 
-  function filterItems(category) {
-    const items = document.querySelectorAll(".item-card");
-    items.forEach((item) => {
-      const itemCategory = item.getAttribute("data-category");
-      if (category === "all" || itemCategory === category) {
-        item.classList.remove("hidden");
-      } else {
-        item.classList.add("hidden");
+    logout.replaceWith(logout.cloneNode(true));
+    logout = document.getElementById("logoutLink");
+    if (!logout) return;
+
+    logout.addEventListener("click", async (e) => {
+      e.preventDefault();
+      try {
+        const res = await fetch("/api/logout", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" }
+        });
+
+        if (res.ok) {
+          resetLoggedOutUI();
+          setTimeout(() => updateAuthUI(), 150);
+        } else {
+          alert("Logout failed.");
+        }
+      } catch {
+        alert("Error logging out.");
       }
     });
   }
 
-  // POPUP WHEN SCROLLING NEAR BOTTOM ----------------------------------------------------------------
-  let timer;
-  let popupShown = false; // Tracks whether the popup is currently visible
-  let recentlyClosed = false; // Prevents instant re-showing after close
+  document.addEventListener("click", (ev) => {
+    if (!userDropdown || !userDropdownContent || !userPic) return;
 
-  function isAtBottom() {
-    const scrollY = window.scrollY || window.pageYOffset;
-    const viewportHeight = window.innerHeight;
-    const fullHeight = document.body.offsetHeight;
-    return scrollY + viewportHeight >= fullHeight - 10;
-  }
+    if (userDropdown.classList.contains("logged-out")) return;
 
-  window.addEventListener("scroll", () => {
-    if (isAtBottom()) {
-      if (!popupShown && !timer && !recentlyClosed) {
-        timer = setTimeout(() => {
-          const popup = document.getElementById("signin-popup");
-          if (popup) popup.classList.remove("popup-hidden");
-          document.body.classList.add("blurred");
-          popupShown = true;
-          timer = null;
-        }, 500);
+    if (userPic.contains(ev.target)) {
+      const open = userDropdown.classList.toggle("open");
+
+      if (open) {
+        const rect = userPic.getBoundingClientRect();
+        userDropdownContent.style.position = "fixed";
+        userDropdownContent.style.left = `${rect.left}px`;
+        userDropdownContent.style.top = `${rect.bottom + 6}px`;
+        userDropdownContent.style.zIndex = "2147483647";
+        userDropdownContent.style.display = "block";
+        userDropdownContent.classList.remove("hidden");
+      } else {
+        userDropdownContent.classList.add("hidden");
+        userDropdownContent.style.display = "none";
       }
-    } else {
-      clearTimeout(timer);
-      timer = null;
+
+      ev.stopPropagation();
+      return;
+    }
+
+    if (!userDropdown.contains(ev.target)) {
+      userDropdown.classList.remove("open");
+      userDropdownContent.classList.add("hidden");
+      userDropdownContent.style.display = "none";
     }
   });
 
-  const popupClose = document.querySelector(".popup-close");
-  if (popupClose) {
-    popupClose.addEventListener("click", () => {
-      const popup = document.getElementById("signin-popup");
-      if (popup) popup.classList.add("popup-hidden");
-      document.body.classList.remove("blurred");
-      popupShown = false;
-      recentlyClosed = true;
-
-      // Let it reappear again after a short cooldown (4 seconds)
-      setTimeout(() => {
-        recentlyClosed = false;
-      }, 4000);
-    });
-  }
-
-  // CATEGORY FILTER LOGIC ---------------------------------------------------------------------------
-  const dropdown = document.querySelector(".category-dropdown");
-  const products = document.querySelectorAll(".product-card");
-
-  if (dropdown) {
-    dropdown.addEventListener("change", (e) => {
-      const selectedCategory = e.target.value;
-      products.forEach((product) => {
-        if (
-          !selectedCategory ||
-          selectedCategory === "all" ||
-          product.dataset.category === selectedCategory
-        ) {
-          product.style.display = "";
-        } else {
-          product.style.display = "none";
-        }
-      });
-    });
-  }
-
+  resetLoggedOutUI();
+  updateAuthUI();
 });
 

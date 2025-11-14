@@ -13,60 +13,68 @@ html, body {
 }
 
 header {
-    position: sticky;
+    position: fixed;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 1000;
     background-color: #004aad;
-    padding: 5px 0 0 0;
+    padding: 6px 0;
     display: flex;
     align-items: center;
+    height: 70px; /* thicker navbar */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
-.logo{
-    margin-left: 10px;
+
+.logo {
+    margin-left: 15px;
     display: flex;
     align-items: center;
     width: fit-content;
     cursor: pointer;
     overflow: hidden;
 }
+
 .logo-wrap {
     position: relative;
-    margin:5px, 5px, 0, 0;
-    width: 80px;
-    height: 80px;
+    width: 55px;
+    height: 55px;
     flex-shrink: 0;
 }
+
 #cart {
-    position: relative;
     width: 100%;
     height: auto;
     display: block;
     z-index: 1;
 }
-#glass{
+
+#glass {
     position: absolute;
-    bottom: 15px;
-    right: -5px;
-    width: 50px;
+    bottom: 10px;
+    right: -3px;
+    width: 32px;
     height: auto;
     transition: transform 0.4s ease, opacity 0.4s ease;
     z-index: 2;
 }
-#logo-text{
+
+#logo-text {
     opacity: 0;
     transition: opacity 0.4s ease;
     font-family: Arial, Helvetica, sans-serif;
     font-weight: bold;
-    font-size: 150%;
+    font-size: 120%;
     color: white;
     pointer-events: none;
 }
 
-.logo:hover #glass{
-    transform: translateX(40px);
+.logo:hover #glass {
+    transform: translateX(25px);
     opacity: 0;
 }
-.logo:hover #logo-text{
+
+.logo:hover #logo-text {
     opacity: 1;
 }
 
@@ -190,12 +198,13 @@ margin-bottom: 15px;
 
  /* TOP BAR ------------------------------------------------------------------------- */
 .navBar {
-    position: relative;
+  position: relative;
   background-color: #080b3b;
   padding: 10px 20px;
   display: flex;
   align-items: center;      
-  justify-content: space-between;  
+  justify-content: space-between;
+  margin-top: 70px;
 }
 .sideBarBtn{
   color: rgb(255, 255, 255);
@@ -267,6 +276,18 @@ margin-bottom: 15px;
   display: flex;
   text-decoration: none;
 }
+.loginbtn,
+.loginbtn a#signinLink {
+  position: relative !important;
+  z-index: 2147483647 !important;
+  pointer-events: auto !important;
+  display: inline-block !important;
+  cursor: pointer !important;
+}
+.loginbtn .welcome-text {
+  cursor: default !important;
+}
+
 .navLinks ul li a:hover {
   color: #0077cc;
 }
@@ -275,43 +296,64 @@ margin-bottom: 15px;
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  cursor: pointer;
   margin-left: 20px;
 }
 
 
 
-.user-dropdown {
-    position: relative;
-    display: inline-block;
-    margin-left: 20px;
-    
-  
-  }
 
-  .user-dropdown-content {
-    display: none;
-    position: absolute;
-    right: 0;
-    min-width: 160px;
-    box-shadow: 0px 4px 8px rgba(0,0,0,0.15);
-    z-index: 1;
-    border-radius: 5px;
-    overflow: hidden;
-    background-color: #063173;
-  }
-  .user-dropdown-content a {
+.user-dropdown { display: inline-block; position: relative; }
+.user-dropdown-content {
+  display: none;    /* hidden by default */
+  position: absolute;
+  right: 0;
+  min-width: 160px;
+  box-shadow: 0px 4px 8px rgba(0,0,0,0.15);
+  z-index: 1;
+  border-radius: 5px;
+  overflow: hidden;
+  background-color: #063173;
+}
+
+/* toggled-visible state (JS will add/remove this) */
+.user-dropdown.open .user-dropdown-content {
+  display: block !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  position: absolute !important;
+  top: calc(100% + 6px) !important; /* place below avatar */
+  left: 0 !important;
+  z-index: 2147483647 !important;
+}
+.user-dropdown-content a {
     color: rgb(255, 255, 255);
     padding: 10px 16px;
     display: block;
     text-decoration: none;
-  }
-  .user-dropdown-content a:hover {
+}
+.user-dropdown-content a:hover {
     background-color: #00023793;
   }
-  .user-dropdown:hover .user-dropdown-content {
+.user-dropdown:hover .user-dropdown-content {
     display: block;
   }
+user-dropdown:not(.logged-out) .userPic {
+  cursor: pointer;
+}
+.user-dropdown.logged-out {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+
+.user-dropdown.logged-out * {
+  pointer-events: none !important;
+  cursor: default !important;
+}
+.user-dropdown.logged-out .userPic {
+  cursor: default !important;
+  opacity: 1 !important; 
+  pointer-events: none !important;
+}
 
 
 
