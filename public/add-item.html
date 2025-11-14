@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Adding Items</title>
+    <link rel="stylesheet" href="css/add-item.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+  </head>
+
+  <body>
+    <header>
+      <div class="logo">
+        <div class="logo-wrap">
+          <img src="images/cart.png" alt="Shopping cart logo" id="cart" />
+          <img src="images/glass.png" alt="Search icon" id="glass" />
+        </div>
+        <span id="logo-text">ClassCart</span>
+      </div>
+    </header>
+
+    <!-- SIDE BAR -->
+    <div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
+    <div id="sidebar" class="sidebar hidden">
+      <button id="closeSidebar" class="close-btn">&times;</button>
+      <h1 class="categories-title">My Sales</h1>
+      <br /><br />
+      <ul class="sidebar-links">
+        <li><a href="#" onclick="filterItems('books-electronics')"><i class="fas fa-book"></i> Books & Electronics</a></li>
+        <li><a href="#" onclick="filterItems('art-craft')"><i class="fas fa-paint-brush"></i> Art & Craft Supplies</a></li>
+        <li><a href="#" onclick="filterItems('clothing')"><i class="fas fa-tshirt"></i> Clothing & Uniforms</a></li>
+        <li><a href="#" onclick="filterItems('bags')"><i class="fas fa-shopping-bag"></i> Bags & Storage</a></li>
+        <li><a href="#" onclick="filterItems('tools')"><i class="fas fa-tools"></i> Essentials & Tools</a></li>
+      </ul>
+    </div>
+
+    <div class="navBar">
+      <nav class="navLinks">
+        <ul>
+          <li><a href="view-sales.html"><i class="fa-solid fa-store"></i></a></li>
+          <li><a href="#"><i class="fas fa-envelope"></i></a></li>
+        </ul>
+
+        <div class="user-dropdown" style="position: relative; display: inline-block">
+          <div style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+            <label style="font-size: 14px; color: #ffffff">Hi, Username</label>
+            <img src="images/userPic.jpg" alt="User profile picture" class="userPic" style="width: 40px; height: 40px; border-radius: 50%" />
+          </div>
+          <div class="user-dropdown-content">
+            <a href="index.html">Dashboard</a>
+            <a href="my-profile.html">My Profile</a>
+            <a href="#">Settings</a>
+            <a href="login-register.html">Logout</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+
+    <main class="create-listing-container">
+      <h1>Create New Listing</h1>
+      <form class="listing-form" id="listingForm" enctype="multipart/form-data">
+        <label for="sellerName">Seller Name</label>
+        <input type="text" id="sellerName" name="sellerName" placeholder="Enter your name" required />
+        <label for="itemName">Item Name</label>
+        <input type="text" id="itemName" name="itemName" placeholder="Enter item name" required />
+        <label for="price">Price (₱)</label>
+        <input type="number" id="price" name="price" placeholder="Enter price" required />
+        <label for="category">Item Category</label>
+        <select id="category" name="category" required>
+          <option value="">--Select Category--</option>
+          <option value="Books">Books</option>
+          <option value="Electronics">Electronics</option>
+          <option value="Arts and Crafts">Arts and Crafts</option>
+          <option value="Clothing and Uniforms">Clothing and Uniforms</option>
+          <option value="Bags and Storage">Bags and Storage</option>
+          <option value="Tools">Tools</option>
+          <option value="Essentials">Essentials</option>
+        </select>
+        <label for="condition">Item Condition</label>
+        <select id="condition" name="condition" required>
+          <option value="">--Select Condition--</option>
+          <option value="New">New</option>
+          <option value="Lightly Used">Lightly Used</option>
+          <option value="Used">Used</option>
+        </select>
+        <label for="description">Item Description</label>
+        <textarea id="description" name="description" placeholder="Describe your item..." rows="5" required></textarea>
+        <label for="location">Location</label>
+        <input type="text" id="location" name="location" placeholder="Enter your location" required />
+        <label for="imageUpload">Upload Item Image</label>
+        <input type="file" id="imageUpload" name="imageUpload" accept="image/*" required />
+
+        <div class="form-buttons">
+          <button type="submit" class="save-btn">Save Listing</button>
+          <button type="reset" class="delete-btn">Clear Form</button>
+        </div>
+      </form>
+    </main>
+
+    <footer class="footer">
+      <div class="footerlogo">ClassCart</div>
+      <p>© 2025 ClassCart. All rights reserved.</p>
+      <div class="footerlinks">
+        <a href="about.html">About</a>
+        <a href="faqs.html">FAQs</a>
+        <a href="contact.html">Contact Us</a>
+        <a href="terms.html">Terms of Service</a>
+        <a href="privacy.html">Privacy Policy</a>
+      </div>
+      <div class="footersocials">
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-instagram"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+      </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="js/add-item.js"></script>
+    <script src="js/index.js"></script>
+    <script src="js/item-listings.js"></script>
+  </body>
+</html>
