@@ -13,6 +13,7 @@ dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = process.env.DB_NAME || "classcart_db";
+
 if (!MONGO_URI) {
   console.error("❌ MONGO_URI missing in .env");
   process.exit(1);
@@ -44,6 +45,7 @@ async function start() {
     return client.db(DB_NAME).collection(name);
   }
 
+  // Sessions
   app.use(
     session({
       name: "classcart.sid",
@@ -60,7 +62,7 @@ async function start() {
     })
   );
 
-  // --- ROUTE: Add Listing (base64 image or imageUrl) ---
+  // --- Add Listing ---
   app.post("/api/add-listing-base64", async (req, res) => {
     try {
       const {
@@ -80,6 +82,7 @@ async function start() {
       }
 
       const listings = getCollection("listings");
+
       const newItem = {
         title,
         description,
@@ -101,10 +104,14 @@ async function start() {
     }
   });
 
-  // --- ROUTE: Get All Listings ---
+  // --- Get Listings ---
   app.get("/api/listings", async (req, res) => {
     try {
-      const listings = await getCollection("listings").find().sort({ createdAt: -1 }).toArray();
+      const listings = await getCollection("listings")
+        .find()
+        .sort({ createdAt: -1 })
+        .toArray();
+
       res.json(listings);
     } catch (error) {
       console.error("Error fetching listings:", error);
@@ -121,16 +128,14 @@ async function start() {
 
       const users = getCollection("users");
 
-      const existingUser = await users.findOne({ username });
-      if (existingUser) return res.status(409).json({ error: "Username already taken" });
-
-      const existingEmail = await users.findOne({ email });
-      if (existingEmail) return res.status(409).json({ error: "Email already registered" });
+      if (await users.findOne({ username })) return res.status(409).json({ error: "Username already taken" });
+      if (await users.findOne({ email })) return res.status(409).json({ error: "Email already registered" });
 
       const existingContact = contact ? await users.findOne({ contact }) : null;
       if (existingContact) return res.status(409).json({ error: "Mobile number already registered" });
 
       const hash = await bcrypt.hash(password, 10);
+
       await users.insertOne({
         name: name?.trim() || "",
         email: email?.trim() || "",
@@ -144,7 +149,7 @@ async function start() {
       return res.status(201).json({ ok: true, message: "Registered" });
     } catch (err) {
       console.error("Register error:", err);
-      if (err && err.code === 11000) return res.status(409).json({ error: "Duplicate key error" });
+      if (err?.code === 11000) return res.status(409).json({ error: "Duplicate key error" });
       return res.status(500).json({ error: "server error" });
     }
   });
@@ -164,6 +169,7 @@ async function start() {
       if (!match) return res.status(401).json({ error: "invalid credentials" });
 
       req.session.user = { username: user.username };
+
       return res.json({
         ok: true,
         message: "Logged in",
@@ -175,7 +181,7 @@ async function start() {
     }
   });
 
-  // --- LOGOUT ---
+  // --- LOGOUT (merged correctly) ---
   app.post("/api/logout", (req, res) => {
     try {
       req.session.destroy((err) => {
@@ -196,7 +202,9 @@ async function start() {
   // --- PROFILE ---
   app.get("/api/profile", async (req, res) => {
     try {
-      if (!req.session || !req.session.user) return res.status(401).json({ error: "not authenticated" });
+      if (!req.session || !req.session.user) {
+        return res.status(401).json({ error: "not authenticated" });
+      }
 
       const username = req.session.user.username;
       const users = getCollection("users");
@@ -217,8 +225,10 @@ async function start() {
     }
   });
 
-  // --- Default route for sanity check ---
-  app.get("/__health", (req, res) => res.json({ ok: true, time: new Date().toISOString() }));
+  // --- HEALTH CHECK ---
+  app.get("/__health", (req, res) =>
+    res.json({ ok: true, time: new Date().toISOString() })
+  );
 
   // --- START SERVER ---
   const PORT = process.env.PORT || 3000;
