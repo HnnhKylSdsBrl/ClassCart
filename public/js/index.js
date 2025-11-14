@@ -19,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function toggleCreateListing(visible) {
     const createBtn = document.querySelector(".createNewListingBtn");
     if (!createBtn) return;
+    // createNewListingBtn is wrapped by an <a> in markup; handle both cases
     const wrapper = createBtn.closest("a") || createBtn;
     wrapper.style.display = visible ? "" : "none";
   }
@@ -37,7 +38,6 @@ document.addEventListener("DOMContentLoaded", () => {
     userDropdown = document.createElement("div");
     userDropdown.className = "user-dropdown logged-out";
 
-    // include Dashboard and keep items minimal — matches the compact menu style you showed
     userDropdown.innerHTML = `
       <div class="user-summary">
         <div class="loginbtn-placeholder"></div>
@@ -56,14 +56,13 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const existingContent = userDropdown.querySelector(".user-dropdown-content");
       if (existingContent && !/Dashboard/i.test(existingContent.innerText)) {
-        // add Dashboard at top
         const dashboardLink = document.createElement("a");
         dashboardLink.href = "index.html";
         dashboardLink.textContent = "Dashboard";
         existingContent.insertBefore(dashboardLink, existingContent.firstChild);
       }
     } catch (e) {
-      // ignore if unexpected structure
+      // ignore unexpected structure
     }
   }
 
@@ -91,6 +90,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let logout = document.getElementById("logoutLink");
     if (!logout) return;
 
+    // ensure fresh handler
     logout.replaceWith(logout.cloneNode(true));
     logout = document.getElementById("logoutLink");
     if (!logout) return;
@@ -213,13 +213,13 @@ document.addEventListener("DOMContentLoaded", () => {
     userDropdownContent.style.visibility = "hidden";
     userDropdownContent.classList.remove("hidden");
 
-    // Enforce a compact max width to prevent full-stretch (matches your compact menu)
-    const COMPACT_MAX = 220; // px — adjust if you want slightly wider
+    // Enforce a compact max width to prevent full-stretch (matches compact menu)
+    const COMPACT_MAX = 220; // px
     userDropdownContent.style.boxSizing = "border-box";
     userDropdownContent.style.maxWidth = `${COMPACT_MAX}px`;
     userDropdownContent.style.width = "auto";
 
-    // measure final width/height after the maxWidth is applied
+    // measure
     const dropdownWidth = Math.min(userDropdownContent.offsetWidth || COMPACT_MAX, COMPACT_MAX);
     const dropdownHeight = userDropdownContent.offsetHeight || 120;
 
@@ -231,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const maxLeft = Math.max(10, window.innerWidth - dropdownWidth - 10);
     leftPos = Math.min(Math.max(leftPos, minLeft), maxLeft);
 
-    // If dropdown would extend below viewport bottom, prefer showing above avatar
+    // If dropdown would extend below viewport bottom, prefer above avatar
     const spaceBelow = window.innerHeight - rect.bottom;
     if (spaceBelow < dropdownHeight + 12) {
       const topPos = rect.top - dropdownHeight - 6;
@@ -291,8 +291,9 @@ document.addEventListener("DOMContentLoaded", () => {
   resetLoggedOutUI();
   updateAuthUI();
 
-  /* ========= Listings loader (kept safe) ========= */
+  /* ========= Listings loader (robust across pages) ========= */
   (async function loadListings() {
+    // prefer the primary container ids/classes used in your markup
     const container = document.querySelector(".listed-items-container")
       || document.querySelector(".listed-items")
       || document.getElementById("itemsContainer")
@@ -308,25 +309,45 @@ document.addEventListener("DOMContentLoaded", () => {
 
       container.innerHTML = "";
       listings.forEach((item) => {
+        // create clickable card element
         const card = document.createElement("div");
         card.classList.add("item-card");
+        card.style.cursor = "pointer";
+        // keep a data-id attribute so other scripts can use it
+        const itemId = item.id ?? item._id ?? item._id_str ?? "";
+        if (itemId) card.setAttribute("data-id", String(itemId));
+
         card.innerHTML = `
           <div class="card shadow-md p-3 m-2 rounded-xl" style="width:200px;">
-            <img src="${item.imageUrl || 'images/usb.jpg'}" alt="${item.title || 'Item'}" class="w-full rounded-lg mb-2" style="height:150px; object-fit:cover;" />
-            <p><strong>${item.title || ''}</strong></p>
-            <p>₱${item.price ?? ''}</p>
-            <p>${item.category ?? ''}</p>
-            <p>${item.condition ?? ''}</p>
-            <p>${item.location ?? ''}</p>
-            <p><i>Seller:</i> ${item.sellerName ?? ''}</p>
+            <img src="${escapeHTML(item.imageUrl || 'images/usb.jpg')}" alt="${escapeHTML(item.title || 'Item')}" class="w-full rounded-lg mb-2 listing-image" style="height:150px; object-fit:cover;" />
+            <div class="product-details">
+              <h3 class="listing-title">${escapeHTML(item.title || '')}</h3>
+              <div class="listing-price">₱${item.price ?? ''}</div>
+              <div class="listing-description">${escapeHTML((item.description || '').slice(0, 120))}${(item.description && item.description.length>120)?'...':''}</div>
+              <div class="seller" style="font-size:12px;color:#666;margin-top:6px;">Seller: ${escapeHTML(item.sellerName ?? '')}</div>
+            </div>
           </div>
         `;
+
+        // click navigates to item detail page, pass id in query
+        card.addEventListener('click', () => {
+          const id = item.id ?? item._id ?? item._id_str ?? "";
+          if (!id) {
+            // try to encode the whole item as fallback (not ideal) but avoid breaking UX
+            console.warn("Item id missing for listing click", item);
+            alert("Cannot open item: missing id.");
+            return;
+          }
+          window.location.href = `item.html?id=${encodeURIComponent(String(id))}`;
+        });
+
         container.appendChild(card);
       });
     } catch (err) {
       console.error("Failed to load listings:", err);
     }
 
+    // auto-refresh once after adding item (used by add-item page)
     if (localStorage.getItem("reloadListings") === "true") {
       localStorage.removeItem("reloadListings");
       location.reload();
@@ -339,5 +360,26 @@ document.addEventListener("DOMContentLoaded", () => {
       openDropdownNearAvatar();
     }
   });
+
+  /* ========= Sidebar open/close handlers (if present on page) ========= */
+  const openSidebarBtn = document.querySelector(".sideBarBtn");
+  const sidebar = document.getElementById("sidebar");
+  const sidebarOverlay = document.getElementById("sidebarOverlay");
+  const closeSidebarBtn = document.getElementById("closeSidebar");
+
+  function openSidebar() {
+    if (!sidebar) return;
+    sidebar.classList.remove("hidden");
+    if (sidebarOverlay) sidebarOverlay.classList.remove("hidden");
+  }
+  function closeSidebar() {
+    if (!sidebar) return;
+    sidebar.classList.add("hidden");
+    if (sidebarOverlay) sidebarOverlay.classList.add("hidden");
+  }
+
+  if (openSidebarBtn) openSidebarBtn.addEventListener("click", openSidebar);
+  if (closeSidebarBtn) closeSidebarBtn.addEventListener("click", closeSidebar);
+  if (sidebarOverlay) sidebarOverlay.addEventListener("click", closeSidebar);
 
 });

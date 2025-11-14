@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Item Details</title>
+
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    .item-page { max-width: 1100px; margin: 120px auto 80px; padding: 20px; }
+    .item-grid { display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+    .item-image { width:420px; max-width:100%; border-radius:10px; object-fit:cover; }
+    .item-info { flex:1; min-width:260px; }
+    .item-title { font-size:28px; font-weight:700; margin-bottom:8px; }
+    .item-price { color:#0a6b2e; font-size:22px; font-weight:800; margin-bottom:10px; }
+    .btn { padding:10px 14px; border-radius:8px; background:#0077cc; color:#fff; font-weight:700; text-decoration:none; display:inline-block; }
+    .btn.ghost { background:transparent; color:#333; border:1px solid #ddd; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-wrap">
+      <img src="images/cart.png" alt="cart" id="cart" />
+      <img src="images/glass.png" alt="glass" id="glass" />
+    </div>
+    <span id="logo-text">ClassCart</span>
+  </div>
+</header>
+
+<!-- sidebar (same as index) -->
+<div id="sidebarOverlay" class="sidebar-overlay hidden"></div>
+<div id="sidebar" class="sidebar hidden">
+  <button id="closeSidebar" class="close-btn">&times;</button>
+  <h1 class="categories-title">Categories</h1><br/><br/>
+  <ul class="sidebar-links">
+    <li><a onclick="filterItems('books')"><i class="fas fa-book"></i> Books</a></li>
+    <li><a onclick="filterItems('art-craft')"><i class="fas fa-paint-brush"></i> Art & Craft</a></li>
+    <li><a onclick="filterItems('clothing')"><i class="fas fa-tshirt"></i> Clothing</a></li>
+    <li><a onclick="filterItems('bags')"><i class="fas fa-shopping-bag"></i> Bags</a></li>
+    <li><a onclick="filterItems('tools')"><i class="fas fa-tools"></i> Tools</a></li>
+    <li><a onclick="filterItems('electronics')"><i class="fas fa-tv"></i> Electronics</a></li>
+    <li><a onclick="filterItems('essentials')"><i class="fas fa-box"></i> Essentials</a></li>
+  </ul>
+</div>
+
+<div class="navBar">
+  <button class="sideBarBtn" onclick="openSidebar()">☰</button>
+  <nav class="navLinks" style="display:flex;align-items:center;gap:20px;padding:10px;flex-wrap:wrap;">
+    <a href="add-item.html"><button class="createNewListingBtn">Create New Listing +</button></a>
+    <div class="searchBar" style="display:flex;align-items:center"><input type="text" placeholder="Search items..."/></div>
+    <div class="user-dropdown" style="position:relative;display:inline-block">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="loginbtn"><a href="login-register.html">Sign in / Log in</a></div>
+        <img src="images/userPic.jpg" class="userPic" alt="user"/>
+      </div>
+      <div class="user-dropdown-content"><a href="profile.html">My Account</a><a href="#">Settings</a><a href="#" id="logoutLink">Logout</a></div>
+    </div>
+  </nav>
+</div>
+
+<main class="item-page">
+  <a href="index.html" style="display:inline-block;margin-bottom:12px;color:#134ae5">← Back to listings</a>
+  <div id="itemContainer" class="item-grid"></div>
+</main>
+
+<!-- modal that prompts user to login if not logged in -->
+<div id="loginRequiredModal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);z-index:2200;">
+  <div style="background:#fff;padding:16px;border-radius:8px;max-width:420px;width:90%;">
+    <h3>Please sign in</h3>
+    <p>You need to be signed in to create an order. Sign in now?</p>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+      <button id="lrClose" class="btn ghost">Close</button>
+      <a id="lrLogin" class="btn" href="login-register.html">Sign in</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// simple item loader + Buy Now that creates a pending meetup order
+(async function(){
+  const esc = s => String(s||'').replaceAll('&','&amp;').replaceAll('<','&lt;');
+
+  const qs = new URLSearchParams(window.location.search);
+  const id = qs.get('id');
+  const container = document.getElementById('itemContainer');
+  if (!id) {
+    container.innerHTML = '<div>Item id missing.</div>';
+    return;
+  }
+
+  let item = null;
+  try {
+    const res = await fetch(`/api/listings/${encodeURIComponent(id)}`);
+    if (res.ok) item = await res.json();
+    else {
+      const all = await (await fetch('/api/listings')).json();
+      item = all.find(x => String(x._id) === id || String(x.id) === id);
+    }
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (!item) {
+    container.innerHTML = '<div>Item not found.</div>';
+    return;
+  }
+
+  container.innerHTML = `
+    <img src="${esc(item.imageUrl||'images/usb.jpg')}" class="item-image" alt="${esc(item.title)}"/>
+    <div class="item-info">
+      <div class="item-title">${esc(item.title)}</div>
+      <div class="item-price">₱${item.price ?? ''}</div>
+      <div style="color:#666;margin-bottom:12px;">Category: ${esc(item.category)} • Condition: ${esc(item.condition)} • Location: ${esc(item.location)}</div>
+      <p style="line-height:1.5;color:#222">${esc(item.description || 'No description provided.')}</p>
+
+      <div style="margin-top:14px;">
+        <a id="msgSeller" class="btn" href="chat.html?seller=${encodeURIComponent(item.username || item.sellerName || '')}">Message Seller</a>
+        <button id="buyNow" class="btn" style="background:#2c9f45;margin-left:8px">Buy Now (Reserve)</button>
+      </div>
+
+      <div style="margin-top:18px;color:#555;font-size:13px;">
+        <strong>Seller:</strong> ${esc(item.sellerName || item.username || '')}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('buyNow').addEventListener('click', async (ev) => {
+    try {
+      const resp = await fetch('/api/profile', { credentials: 'include' });
+      if (!resp.ok) {
+        // ask to log in
+        document.getElementById('loginRequiredModal').style.display = 'flex';
+        document.getElementById('lrClose').onclick = () => document.getElementById('loginRequiredModal').style.display = 'none';
+        return;
+      }
+      // create order
+      const create = await fetch('/api/orders/create', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ itemId: String(item._id ?? item.id ?? '') })
+      });
+      const j = await create.json();
+      if (!create.ok) {
+        return alert(j.error || 'Failed to create order.');
+      }
+      // go to transactions / show success
+      alert('Order created — it is now pending. Meet the seller and both confirm on the Transactions page.');
+      window.location.href = 'transactions.html';
+    } catch (err) {
+      console.error(err);
+      alert('Error creating order.');
+    }
+  });
+
+})();
+</script>
+
+<!-- keep index.js for nav and dropdown behavior -->
+<script src="js/index.js"></script>
+</body>
+</html>
